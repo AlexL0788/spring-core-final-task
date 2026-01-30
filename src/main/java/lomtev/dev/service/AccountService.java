@@ -1,5 +1,7 @@
 package lomtev.dev.service;
 
+import lomtev.dev.exception.NotEnoughMoneyException;
+import lomtev.dev.exception.UserHasOnlyOneAccountException;
 import lomtev.dev.model.Account;
 import lomtev.dev.model.User;
 import lomtev.dev.properties.AccountProperties;
@@ -42,19 +44,20 @@ public class AccountService {
         Optional<Account> accountOptional = getAccountById(accountId);
 
         if (accountOptional.isEmpty()) {
-            System.out.println("Operation failed, account with id " + accountId + " does not exist");
-            return;
+            throw new IllegalArgumentException("Operation failed, account with id " + accountId + " was not found");
         }
 
         Account account = accountOptional.get();
         User user = userService.getUserById(account.getUserId());
 
-        if (userService.checkIfAccountCanBeClosed(user)) {
+        if (checkIfAccountCanBeClosed(user)) {
             accounts.remove(account);
             user.getAccountList().remove(account);
             Account anotherAccount = user.getAccountList().getFirst();
             anotherAccount.setMoneyAmount(anotherAccount.getMoneyAmount().add(account.getMoneyAmount()));
-            System.out.println("Account with id " + account.getId() + " has been closed");
+            System.out.println("Account with id " + account.getId() + " was closed");
+        } else {
+            throw new UserHasOnlyOneAccountException("Operation failed, account can't be closed, user " + user + " has only 1 account");
         }
     }
 
@@ -62,29 +65,26 @@ public class AccountService {
         Optional<Account> accountOptional = getAccountById(accountId);
 
         if (accountOptional.isEmpty()) {
-            System.out.println("Operation failed, account with id " + accountId + " does not exist");
-            return;
+            throw new IllegalArgumentException("Operation failed, account with id " + accountId + " was not found");
         }
 
         if (isPositiveInteger(amount)) {
             Account account = accountOptional.get();
             account.setMoneyAmount(account.getMoneyAmount().add(amount));
         } else {
-            System.out.println("Operation failed, deposit amount must be positive integer number");
+            throw new IllegalArgumentException("Operation failed, deposit amount must be positive integer number");
         }
     }
 
     public void transferMoney(Long accountIdFrom, Long accountIdTo, BigDecimal amount) {
         Optional<Account> optionalAccountFrom = getAccountById(accountIdFrom);
         if (optionalAccountFrom.isEmpty()) {
-            System.out.println("Operation failed, account with id " + accountIdFrom + " does not exist");
-            return;
+            throw new IllegalArgumentException("Operation failed, account with id " + accountIdFrom + " was not found");
         }
 
         Optional<Account> optionalAccountTo = getAccountById(accountIdTo);
         if (optionalAccountTo.isEmpty()) {
-            System.out.println("Operation failed, account with id " + accountIdTo + " does not exist");
-            return;
+            throw new IllegalArgumentException("Operation failed, account with id " + accountIdTo + " was not found");
         }
 
         Account accountFrom = optionalAccountFrom.get();
@@ -96,7 +96,7 @@ public class AccountService {
                 accountTo.setMoneyAmount(accountTo.getMoneyAmount().add(amount));
                 System.out.println("Amount " + amount + " was transferred from account with id " + accountFrom.getId() + " to account with id " + accountTo.getId());
             } else {
-                System.out.println("Operation failed, account " + accountFrom + " doesn't have enough amount: " + amount);
+                throw new NotEnoughMoneyException("Operation failed, account " + accountFrom + " doesn't have enough money amount: " + amount);
             }
         } else {
             BigDecimal amountWithCommission = calculateAmountWithCommission(amount);
@@ -105,7 +105,7 @@ public class AccountService {
                 accountTo.setMoneyAmount(accountTo.getMoneyAmount().add(amount));
                 System.out.println("Amount " + amount + " with commission " + accountProperties.getTransferCommission() + "% was transferred from account with id " + accountFrom.getId() + " to account with id " + accountTo.getId());
             } else {
-                System.out.println("Operation failed, account " + accountFrom + " doesn't have enough amount: " + amountWithCommission);
+                throw new NotEnoughMoneyException("Operation failed, account " + accountFrom + " doesn't have enough money amount: " + amountWithCommission);
             }
         }
     }
@@ -113,8 +113,7 @@ public class AccountService {
     public void withdrawMoney(Long accountId, BigDecimal amount) {
         Optional<Account> optionalAccount = getAccountById(accountId);
         if (optionalAccount.isEmpty()) {
-            System.out.println("Operation failed, account with id " + accountId + " does not exist");
-            return;
+            throw new IllegalArgumentException("Operation failed, account with id " + accountId + " was not found");
         }
 
         Account account = optionalAccount.get();
@@ -122,8 +121,14 @@ public class AccountService {
             account.setMoneyAmount(account.getMoneyAmount().subtract(amount));
             System.out.println("Successful withdrawal of amount " + amount + " from account with id " + account.getId());
         } else {
-            System.out.println("Operation failed, account " + account + " doesn't have enough amount: " + amount);
+            throw new NotEnoughMoneyException("Operation failed, account " + account + " doesn't have enough money amount: " + amount);
         }
+    }
+
+    private boolean checkIfAccountCanBeClosed(User user) {
+        int accountsCount = user.getAccountList().size();
+
+        return  accountsCount > 1;
     }
 
     private boolean accountsHaveSameOwner(Account accountFirst, Account accountSecond) {

@@ -1,6 +1,6 @@
 package lomtev.dev.service;
 
-public enum AvailableOperations {
+public enum AvailableOperation {
     USER_CREATE,
     SHOW_ALL_USERS,
     ACCOUNT_CREATE,

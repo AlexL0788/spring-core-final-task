@@ -1,6 +1,6 @@
 package lomtev.dev;
 
-import lomtev.dev.service.AvailableOperations;
+import lomtev.dev.service.AvailableOperation;
 import lomtev.dev.service.OperationsConsoleListener;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
@@ -10,8 +10,12 @@ public class Main {
         OperationsConsoleListener operationsConsoleListener = context.getBean(OperationsConsoleListener.class);
 
         while (true) {
-            AvailableOperations availableOperation = operationsConsoleListener.readOperation();
-            operationsConsoleListener.processOperation(availableOperation);
+            try {
+                AvailableOperation availableOperation = operationsConsoleListener.readOperation();
+                operationsConsoleListener.processOperation(availableOperation);
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
+            }
         }
     }
 }

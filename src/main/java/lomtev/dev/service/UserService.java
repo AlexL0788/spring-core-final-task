@@ -1,5 +1,6 @@
 package lomtev.dev.service;
 
+import lomtev.dev.exception.LoginAlreadyExistsException;
 import lomtev.dev.model.User;
 import org.springframework.stereotype.Service;
 
@@ -28,22 +29,12 @@ public class UserService {
 
             System.out.println("User created: " + user);
         } else {
-            System.out.println("User creation failed. User with login " + login + " already exists!");
+            throw new LoginAlreadyExistsException("User creation failed. User with login " + login + " already exists!");
         }
     }
 
     public List<User> showAllUsers() {
         return users;
-    }
-
-    public boolean checkIfAccountCanBeClosed(User user) {
-        int accountsCount = user.getAccountList().size();
-
-        if(accountsCount <= 1) {
-            System.out.println("Operation failed, account can't be closed, user " + user + " has only 1 account");
-            return  false;
-        }
-        return true;
     }
 
     private boolean checkIfUserWithLoginCanBeCreated(String login) {
@@ -54,6 +45,6 @@ public class UserService {
         return users.stream()
                 .filter(user -> user.getId().equals(userId))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Operation failed, user with id " + userId + " not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Operation failed, user with id " + userId + " was not found"));
     }
 }
