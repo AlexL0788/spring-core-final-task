@@ -1,28 +1,51 @@
 package lomtev.dev.model;
 
+import jakarta.persistence.*;
+
+import java.util.ArrayList;
 import java.util.List;
 
+@Entity
+@Table(name = "users")
 public class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String login;
-    private List<Account> accountList;
 
-    public User(Long id, String login, List<Account> accountList) {
-        this.id = id;
+    private String login;
+
+    @OneToMany(mappedBy = "user")
+    private List<Account> accountList = new ArrayList<>();
+
+    public User(String login) {
         this.login = login;
-        this.accountList = accountList;
+    }
+
+    public User() {
     }
 
     public Long getId() {
         return id;
     }
 
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     public String getLogin() {
         return login;
     }
 
+    public void setLogin(String login) {
+        this.login = login;
+    }
+
     public List<Account> getAccountList() {
         return accountList;
+    }
+
+    public void setAccountList(List<Account> accountList) {
+        this.accountList = accountList;
     }
 
     @Override
@@ -30,7 +53,7 @@ public class User {
         return "User{" +
                 "id=" + id +
                 ", login='" + login + '\'' +
-                ", accountList=" + accountList +
+                ", accountListSize=" + (accountList != null ? accountList.size() : 0) +
                 '}';
     }
 }

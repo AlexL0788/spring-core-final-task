@@ -15,7 +15,7 @@ public class ShowAllUsersProcessor implements OperationCommandProcessor {
 
     @Override
     public void processOperation() {
-        userService.showAllUsers().forEach(System.out::println);
+        userService.getAllUsers().forEach(System.out::println);
     }
 
     @Override

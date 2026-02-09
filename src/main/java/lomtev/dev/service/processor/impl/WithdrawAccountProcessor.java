@@ -32,6 +32,7 @@ public class WithdrawAccountProcessor implements OperationCommandProcessor, Posi
             if (isPositiveNumber(accountId)) {
                 BigDecimal withdrawAmount = new BigDecimal(amountAsString);
                 accountService.withdrawMoney(accountId, withdrawAmount);
+                System.out.println("Successful withdrawal of amount " + withdrawAmount + " from account with id " + accountId);
             } else {
                 throw new IllegalArgumentException("Withdraw money failed, 'accountId' and 'amount' must be positive integer numbers!");
             }

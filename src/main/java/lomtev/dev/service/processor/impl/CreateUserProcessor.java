@@ -1,5 +1,6 @@
 package lomtev.dev.service.processor.impl;
 
+import lomtev.dev.model.User;
 import lomtev.dev.service.AvailableOperation;
 import lomtev.dev.service.UserService;
 import lomtev.dev.service.processor.OperationCommandProcessor;
@@ -21,8 +22,8 @@ public class CreateUserProcessor implements OperationCommandProcessor {
     public void processOperation() {
         System.out.println("Enter login for new user:");
         String login = scanner.nextLine().trim();
-
-        userService.createUser(login);
+        User user = userService.createUser(login);
+        System.out.println("User created: " + user);
     }
 
     @Override
