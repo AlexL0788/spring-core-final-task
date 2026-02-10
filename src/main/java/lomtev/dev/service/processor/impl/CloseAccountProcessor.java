@@ -28,7 +28,8 @@ public class CloseAccountProcessor implements OperationCommandProcessor, Positiv
 
             if (isPositiveNumber(accountId)) {
                 accountService.closeAccount(accountId);
-            } else  {
+                System.out.println("Account with id " + accountId + " was closed");
+            } else {
                 throw new IllegalArgumentException("Account closing failed, 'accountId' must be positive integer number!");
             }
         } catch (NumberFormatException e) {

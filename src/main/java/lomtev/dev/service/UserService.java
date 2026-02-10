@@ -2,49 +2,48 @@ package lomtev.dev.service;
 
 import lomtev.dev.exception.LoginAlreadyExistsException;
 import lomtev.dev.model.User;
+import lomtev.dev.util.TransactionHelper;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class UserService {
-    private final List<User> users = new ArrayList<>();
-    private Long currentId = 0L;
     private final AccountService accountService;
+    private final TransactionHelper transactionHelper;
+    private final SessionFactory sessionFactory;
 
-    public UserService(AccountService accountService) {
+    public UserService(AccountService accountService, TransactionHelper transactionHelper, SessionFactory sessionFactory) {
         this.accountService = accountService;
+        this.transactionHelper = transactionHelper;
+        this.sessionFactory = sessionFactory;
     }
 
-    private Long nextId() {
-        return ++currentId;
-    }
-
-    public void createUser(String login) {
+    public User createUser(String login) {
         if (checkIfUserWithLoginCanBeCreated(login)) {
-            Long userId = nextId();
-            User user = new User(userId, login, new ArrayList<>(List.of(accountService.createDefaultAccount(userId))));
-            users.add(user);
+            return transactionHelper.executeInTransaction(session -> {
+                User user = new User(login);
+                session.persist(user);
+                session.flush();
+                user.getAccountList().add(accountService.createDefaultAccount(user));
 
-            System.out.println("User created: " + user);
+                return user;
+            });
+
         } else {
             throw new LoginAlreadyExistsException("User creation failed. User with login " + login + " already exists!");
         }
     }
 
-    public List<User> showAllUsers() {
-        return users;
+    public List<User> getAllUsers() {
+        try (Session session = sessionFactory.openSession()) {
+            return session.createQuery("select u from User u left join fetch u.accountList", User.class).list();
+        }
     }
 
     private boolean checkIfUserWithLoginCanBeCreated(String login) {
-        return users.stream().noneMatch(user -> login.equals(user.getLogin()));
-    }
-
-    public User getUserById(Long userId) {
-        return users.stream()
-                .filter(user -> user.getId().equals(userId))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Operation failed, user with id " + userId + " was not found"));
+        return getAllUsers().stream().noneMatch(user -> login.equals(user.getLogin()));
     }
 }
