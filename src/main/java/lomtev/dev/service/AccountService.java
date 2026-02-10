@@ -6,8 +6,6 @@ import lomtev.dev.model.Account;
 import lomtev.dev.model.User;
 import lomtev.dev.properties.AccountProperties;
 import lomtev.dev.util.TransactionHelper;
-import org.hibernate.Session;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -16,22 +14,15 @@ import java.math.RoundingMode;
 @Service
 public class AccountService {
     private final AccountProperties accountProperties;
-    private final UserService userService;
     private final TransactionHelper transactionHelper;
 
-    public AccountService(AccountProperties accountProperties, @Lazy UserService userService, TransactionHelper transactionHelper) {
+    public AccountService(AccountProperties accountProperties, TransactionHelper transactionHelper) {
         this.accountProperties = accountProperties;
-        this.userService = userService;
         this.transactionHelper = transactionHelper;
     }
 
-    public void createDefaultAccount(Session session, Long userId) {
-        User user = session.find(User.class, userId);
-        if (user == null) {
-            throw new IllegalArgumentException("Operation failed, user with id " + userId + " was not found");
-        }
-        Account account = new Account(accountProperties.getDefaultAmount(), user);
-        session.persist(account);
+    public Account createDefaultAccount(User user) {
+        return new Account(accountProperties.getDefaultAmount(), user);
     }
 
     public Account createAccount(Long userId) {

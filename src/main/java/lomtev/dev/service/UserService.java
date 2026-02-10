@@ -27,7 +27,7 @@ public class UserService {
                 User user = new User(login);
                 session.persist(user);
                 session.flush();
-                accountService.createDefaultAccount(session, user.getId());
+                user.getAccountList().add(accountService.createDefaultAccount(user));
 
                 return user;
             });
